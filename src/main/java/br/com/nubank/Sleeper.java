@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsRequest;
@@ -26,8 +26,9 @@ public class Sleeper {
 
 	public static void main(String[] args) {
 		
-		logger.info("Putting a thread to sleep for 2 minutes");
-		goSleep();
+		Integer timer = Integer.valueOf(System.getenv("TIMER"));
+		logger.info("Putting a thread to sleep for " + timer.toString() + " minutes");
+		goSleep(timer);
 		
 		logger.info("Getting instance ID");
 		Job job = new Job();
@@ -41,16 +42,16 @@ public class Sleeper {
 		
 	}
 	
-	private static void goSleep(){
+	private static void goSleep(Integer timer){
 		try {
-			Thread.sleep(120*1000);
+			Thread.sleep(timer*1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	private static void updateStatus(Job job){
-		AWSCredentials credentials = new ProfileCredentialsProvider().getCredentials();
+		AWSCredentials credentials = new EnvironmentVariableCredentialsProvider().getCredentials();
 		
 		AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
 		
@@ -78,7 +79,7 @@ public class Sleeper {
     	String stringJob = jsonObject.toString();
 		
 		logger.info("Sending message to queue sqs_update");
-		sqs.sendMessage(new SendMessageRequest("https://us-west-2.queue.amazonaws.com/678982507510/sqs_update", stringJob));
+		sqs.sendMessage(new SendMessageRequest(System.getenv("SQS_UPDATE_URL"), stringJob));
 		
 		try {
 			logger.info("Wait for 10 seconds before send signal to terminate the instance");
@@ -88,6 +89,6 @@ public class Sleeper {
 		}
 		
 		logger.info("Sending message to queue sqs_destroy");
-		sqs.sendMessage(new SendMessageRequest("https://us-west-2.queue.amazonaws.com/678982507510/sqs_destroy", stringJob));
+		sqs.sendMessage(new SendMessageRequest(System.getenv("SQS_DESTROY_URL"), stringJob));
 	}
 }
