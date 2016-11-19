@@ -3,12 +3,20 @@ package br.com.nubank;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
+import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsRequest;
+import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsResult;
+import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.SpotInstanceRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
@@ -57,8 +65,29 @@ public class Sleeper {
 
 	private static void updateStatus(Job job){
 		AWSCredentials credentials = new ProfileCredentialsProvider().getCredentials();
+		
+		AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
+		
 		AmazonSQS sqs = new AmazonSQSClient(credentials);
 		
+		List<String> instanceIds = new ArrayList<String>();
+		instanceIds.add(job.getInstanceId());
+		
+		Filter filter = new Filter("instance-id", instanceIds);
+		
+		List<Filter> filters = new ArrayList<Filter>();
+		filters.add(filter);
+		
+		DescribeSpotInstanceRequestsRequest describeRequest = new DescribeSpotInstanceRequestsRequest();
+		describeRequest.setFilters(filters);
+		
+		DescribeSpotInstanceRequestsResult describeResult = ec2.describeSpotInstanceRequests(describeRequest);
+        List<SpotInstanceRequest> describeResponses = describeResult.getSpotInstanceRequests();
+		
+        for (SpotInstanceRequest describeResponse : describeResponses) {
+        	job.setRequestId(describeResponse.getSpotInstanceRequestId().toString());
+        }
+        
 		JSONObject jsonObject = new JSONObject(job);
     	String stringJob = jsonObject.toString();
 		
