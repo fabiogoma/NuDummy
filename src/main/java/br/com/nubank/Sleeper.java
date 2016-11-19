@@ -1,8 +1,5 @@
 package br.com.nubank;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +17,7 @@ import com.amazonaws.services.ec2.model.SpotInstanceRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.util.EC2MetadataUtils;
 
 import br.com.nubank.pojos.Job;
 
@@ -33,14 +31,14 @@ public class Sleeper {
 		
 		logger.info("Getting instance ID");
 		Job job = new Job();
-		job.setInstanceId(getInstanceId());
+		job.setInstanceId(EC2MetadataUtils.getInstanceId().toString());
 		job.setRequestId("");
 		job.setSchedule("");
 		job.setStatus("done");
 		
 		logger.info("Updating the status");
 		updateStatus(job);
-
+		
 	}
 	
 	private static void goSleep(){
@@ -51,21 +49,6 @@ public class Sleeper {
 		}
 	}
 	
-	private static String getInstanceId(){
-		String instanceId = null;
-		try {
-			URL url = new URL("http://169.254.169.254/latest/meta-data/instance-id");
-			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-			String strTemp = "";
-			while (null != (strTemp = br.readLine())) {
-				instanceId = strTemp;
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return instanceId;
-	}
-
 	private static void updateStatus(Job job){
 		AWSCredentials credentials = new ProfileCredentialsProvider().getCredentials();
 		
