@@ -28,21 +28,24 @@ public class Sleeper {
 
 	public static void main(String[] args) {
 		
+		logger.info("Putting a thread to sleep for 2 minutes");
 		goSleep();
 		
+		logger.info("Getting instance ID");
 		Job job = new Job();
 		job.setInstanceId(getInstanceId());
 		job.setRequestId("");
 		job.setSchedule("");
 		job.setStatus("done");
 		
+		logger.info("Updating the status");
 		updateStatus(job);
 
 	}
 	
 	private static void goSleep(){
 		try {
-			Thread.sleep(60*1000);
+			Thread.sleep(120*1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -93,6 +96,13 @@ public class Sleeper {
 		
 		logger.info("Sending message to queue sqs_update");
 		sqs.sendMessage(new SendMessageRequest("https://us-west-2.queue.amazonaws.com/678982507510/sqs_update", stringJob));
+		
+		try {
+			logger.info("Wait for 10 seconds before send signal to terminate the instance");
+			Thread.sleep(10*1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
 		logger.info("Sending message to queue sqs_destroy");
 		sqs.sendMessage(new SendMessageRequest("https://us-west-2.queue.amazonaws.com/678982507510/sqs_destroy", stringJob));
