@@ -27,7 +27,7 @@ public class Sleeper {
 	public static void main(String[] args) {
 		
 		Integer timer = Integer.valueOf(System.getenv("TIMER"));
-		logger.info("Putting a thread to sleep for " + timer.toString() + " minutes");
+		logger.info("Putting a thread to sleep for " + timer.toString() + " seconds");
 		goSleep(timer);
 		
 		logger.info("Getting instance ID");
