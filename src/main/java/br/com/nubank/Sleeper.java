@@ -53,7 +53,7 @@ public class Sleeper {
 	private static void updateStatus(Job job){
 		AWSCredentials credentials = new EnvironmentVariableCredentialsProvider().getCredentials();
 		
-		AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
+		AmazonEC2 ec2 = AmazonEC2ClientBuilder.standard().withRegion(System.getenv("REGION")).build();
 		
 		AmazonSQS sqs = new AmazonSQSClient(credentials);
 		
