@@ -1,11 +1,14 @@
 package br.com.nubank;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,14 +20,20 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-
-public class TerminationTimeChecker implements Runnable {
+public class TerminationTimeChecker extends Thread {
 	private static Logger logger = Logger.getLogger(TerminationTimeChecker.class);
+	
+	public TerminationTimeChecker() {
+		
+	}
+	
+	public void run(){
+		try {
+			checking();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public static String getJson(){
     	DateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -59,14 +68,29 @@ public class TerminationTimeChecker implements Runnable {
             String terminationTime = "";
             if (null != (terminationTime = br.readLine())) {
             	logger.info("Terminate on: " + terminationTime);
-            	
-            	AWSCredentials credentials = new EnvironmentVariableCredentialsProvider().getCredentials();	
-        		AmazonSQS sqs = new AmazonSQSClient(credentials);
-        		
+   	
         		String newSpotInstanceRequest = getJson();
-        		        		
+        		JSONObject jobJson = new JSONObject(newSpotInstanceRequest);
         		logger.info("Request a new instance to continue this job");
-        		sqs.sendMessage(new SendMessageRequest(System.getenv("SQS_LAUNCH_URL"), newSpotInstanceRequest));
+        		
+        		URL provisionerUrl;
+        		URLConnection urlConn;
+        		DataOutputStream printout;
+        		provisionerUrl = new URL ("http://" + jobJson.getJSONObject("job").getString("PROVISIONER_IP") + "/schedule/");
+        		urlConn = provisionerUrl.openConnection();
+        		urlConn.setDoInput (true);
+        		urlConn.setDoOutput (true);
+        		urlConn.setUseCaches (false);
+        		urlConn.setRequestProperty("Content-Type","application/json");   
+
+        		urlConn.connect();  
+        		
+        		JSONObject jsonParam = new JSONObject(newSpotInstanceRequest);
+        		
+        		printout = new DataOutputStream(urlConn.getOutputStream());
+        		printout.writeBytes(URLEncoder.encode(jsonParam.toString(),"UTF-8"));
+        		printout.flush ();
+        		printout.close ();
         		
             }
 	    } catch (FileNotFoundException e) {
@@ -81,11 +105,4 @@ public class TerminationTimeChecker implements Runnable {
 		}
 	}
 
-	public void run() {
-		try {
-			checking();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
 }

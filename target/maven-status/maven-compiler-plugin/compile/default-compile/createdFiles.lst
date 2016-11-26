@@ -1,4 +1,3 @@
 br/com/nubank/pojos/Job.class
-br/com/nubank/pojos/Scheduler.class
-br/com/nubank/helpers/ScheduleParser.class
+br/com/nubank/TerminationTimeChecker.class
 br/com/nubank/Sleeper.class

@@ -26,6 +26,10 @@ public class Sleeper {
 
 	public static void main(String[] args) {
 		
+		TerminationTimeChecker checkingTime = new TerminationTimeChecker();
+		
+		checkingTime.start();
+		
 		Integer timer = Integer.valueOf(System.getenv("TIMER"));
 		logger.info("Putting a thread to sleep for " + timer.toString() + " seconds");
 		goSleep(timer);
