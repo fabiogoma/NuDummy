@@ -76,7 +76,7 @@ public class TerminationTimeChecker extends Thread {
         		URL provisionerUrl;
         		URLConnection urlConn;
         		DataOutputStream printout;
-        		provisionerUrl = new URL ("http://" + jobJson.getJSONObject("job").getString("PROVISIONER_IP") + "/schedule/");
+        		provisionerUrl = new URL ("http://" + jobJson.getJSONObject("job").getString("provisionerIP") + "/schedule/");
         		urlConn = provisionerUrl.openConnection();
         		urlConn.setDoInput (true);
         		urlConn.setDoOutput (true);
