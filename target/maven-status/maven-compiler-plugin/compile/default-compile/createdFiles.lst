@@ -1,3 +1,4 @@
 br/com/nubank/pojos/Job.class
+br/com/nubank/GracefulDestroyer.class
 br/com/nubank/TerminationTimeChecker.class
 br/com/nubank/Sleeper.class
